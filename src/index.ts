@@ -115,6 +115,10 @@ function isObject(val: any): boolean {
 }
 
 function logObject(obj: any, maxLines: number = 20) {
+    if (typeof obj === 'string') {
+        console.log('%c' + obj + SPACER, 'background-color:#ddd; padding:4px;');
+        return;
+    }
     const lines = print_r(obj).split('\n');
     if (lines.length > maxLines || getDepth(obj) > 3) {
         console.dir(obj);
@@ -213,12 +217,10 @@ function traceMethod(
     const oldValue = descriptor.value;
     const parameters = getParamNames(target[key]);
     descriptor.value = function() {
-        clearLog();
-        const result = oldValue.apply(this, [arguments[1], arguments[0]]);
-
         const hasParams = parameters && parameters.length > 0;
         let inputParams = '';
         let inputObject: any;
+        let result: any;
         if (WHITE_LISTED_CLASSES.indexOf(targetName) !== -1) {
             let hasPrimitiveParameterTypes = true;
             if (hasParams == true) {
@@ -257,6 +259,8 @@ function traceMethod(
                 STYLES.inlineResult
             );
 
+            clearLog();
+            result = oldValue.apply(this, [arguments[1], arguments[0]]);
             const internalLog = LOG_CACHE;
             if (internalLog.length) {
                 group('%clogs(' + internalLog.length + ')', STYLES.logs);
@@ -266,29 +270,38 @@ function traceMethod(
                 groupEnd();
             }
 
-            groupCollapsed(
-                `%cparams%c(${getStripedJSON(inputObject)
+            if (inputObject) {
+                const params = getStripedJSON(inputObject)
                     .substring(1)
-                    .slice(0, -1)})`,
-                STYLES.parameters,
+                    .slice(0, -1);
+                groupCollapsed(
+                    `%cparams%c(${params})`,
+                    STYLES.parameters,
+                    STYLES.inlineResult
+                );
+
+                if (hasPrimitiveParameterTypes) {
+                    table(inputObject);
+                } else {
+                    showValue(inputObject, key);
+                }
+                groupEnd();
+            }
+
+            groupCollapsed(
+                '%creturns%c' + getStripedJSON(result),
+                STYLES.result,
                 STYLES.inlineResult
             );
-
-            if (hasPrimitiveParameterTypes) {
-                table(inputObject);
-            } else {
-                showValue(inputObject, key);
+            if (result !== null && result !== undefined) {
+                showValue(result, key);
             }
             groupEnd();
 
-            groupCollapsed(
-                '%creturns ' + getStripedJSON(result),
-                STYLES.result
-            );
-            showValue(result, key);
             groupEnd();
-
-            groupEnd();
+        } else {
+            clearLog();
+            result = oldValue.apply(this, [arguments[1], arguments[0]]);
         }
 
         return result;
