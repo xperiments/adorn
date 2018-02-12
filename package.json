@@ -1,0 +1,24 @@
+{
+    "name": "adorn",
+    "version": "0.0.1",
+    "description": "",
+    "main": "lib/index",
+    "scripts": {
+        "start": "http-server | webpack --watch",
+        "build": "tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/xperiments/adorn.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/xperiments/adorn/issues"
+    },
+    "homepage": "https://github.com/xperiments/adorn#readme",
+    "devDependencies": {
+        "typescript": "^2.7.1"
+    },
+    "types": "lib/index"
+}
